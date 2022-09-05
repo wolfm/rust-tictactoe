@@ -19,25 +19,27 @@ fn main() {
     write!(stdout, "{}", cursor::Goto(1,1)).unwrap();
     
     loop {
-        write_board(&stdout, &board);
+        write_board(&stdout, &board).unwrap();
         match player_turn(&stdout, &mut board) {
             Err(()) => {break;},
             Ok(()) => {}
         };
-        write_board(&stdout, &board);
+        write_board(&stdout, &board).unwrap();
         match check_win(&board) {
             Some(winner) => {
                 if winner == 'c' {
                     write!(stdout, "{}Cats game!", cursor::Goto(1,6)).unwrap();
                 }
-                write!(stdout, "{}The winner is '{}'", cursor::Goto(1,6), winner).unwrap();
+                else {
+                    write!(stdout, "{}The winner is '{}'", cursor::Goto(1,6), winner).unwrap();
+                }
                 break;
             }
             None => {}
         }
         
         ai_turn(&mut board);
-        write_board(&stdout, &board);
+        write_board(&stdout, &board).unwrap();
         match check_win(&board) {
             Some(winner) => {
                 write!(stdout, "{}The winner is '{}'", cursor::Goto(1,6), winner).unwrap();
@@ -109,15 +111,16 @@ fn player_turn(mut stdout: &Stdout, board: &mut [[char; 3]; 3]) -> Result<(), ()
     Ok(())
 }
 
-fn write_board(mut stdout: &Stdout, board: &[[char; 3]; 3]) {
-    write!(stdout, "{}{}", cursor::Save, cursor::Goto(1,1)).unwrap();
-    stdout.write_all(format!("{}|{}|{}\r\n", board[0][0], board[1][0], board[2][0]).as_bytes()).unwrap();
-    stdout.write_all(b"-+-+-\r\n").unwrap();
-    stdout.write_all(format!("{}|{}|{}\r\n", board[0][1], board[1][1], board[2][1]).as_bytes()).unwrap();
-    stdout.write_all(b"-+-+-\r\n").unwrap();
-    stdout.write_all(format!("{}|{}|{}", board[0][2], board[1][2], board[2][2]).as_bytes()).unwrap();
-    stdout.flush().unwrap();
-    write!(stdout, "{}", cursor::Restore).unwrap();
+fn write_board(mut stdout: &Stdout, board: &[[char; 3]; 3]) -> std::io::Result<()> {
+    write!(stdout, "{}{}", cursor::Save, cursor::Goto(1,1))?;
+    stdout.write_all(format!("{}|{}|{}\r\n", board[0][0], board[1][0], board[2][0]).as_bytes())?;
+    stdout.write_all(b"-+-+-\r\n")?;
+    stdout.write_all(format!("{}|{}|{}\r\n", board[0][1], board[1][1], board[2][1]).as_bytes())?;
+    stdout.write_all(b"-+-+-\r\n")?;
+    stdout.write_all(format!("{}|{}|{}", board[0][2], board[1][2], board[2][2]).as_bytes())?;
+    stdout.flush()?;
+    write!(stdout, "{}", cursor::Restore)?;
+    Ok(())
 }
 
 fn check_win(board: &[[char; 3]; 3]) -> Option<char> {
